@@ -1,0 +1,6 @@
+# Override default settings in the test environment (pytest).
+
+[test]
+
+IS_TEST = true
+DO_SUPPRESS_PRINT = true

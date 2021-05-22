@@ -1,0 +1,4 @@
+# Ignore dynaconf secret and local files.
+
+.secrets.toml
+*.local.*

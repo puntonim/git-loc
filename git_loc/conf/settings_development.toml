@@ -1,0 +1,6 @@
+# Override default settings in the development environment.
+# Use secrets.toml for untracked overrides (not just for secrets).
+# Note: do not use *.local.* files (see README.md).
+
+[default]
+

@@ -1,7 +1,8 @@
 from typing import Collection, Optional
-from unittest import mock
 
-from git_loc.git_client import GitDiffEntry, GitLogEntry
+from git_loc.clients.git_client import GitDiffEntry, GitLogEntry
+
+from ..testutils.settings_testutils import override_settings
 
 
 # Notice that this is a context manager!
@@ -18,14 +19,13 @@ class GitLogFactory:
                 def_args += f"'{git_log_entry.hash} {git_log_entry.date} {git_log_entry.email} {git_log_entry.summary}'\n"
             def_args += '" ; /usr/bin/true'
 
-        self.mocks.append(mock.patch("git_loc.git_client.GIT_LOG_BIN", def_args))
-        self.mocks.append(mock.patch("git_loc.git_client.DO_USE_POPEN_SHELL", True))
-        for m in self.mocks:
-            m.start()
+        self.override_settings = override_settings(
+            GIT_LOG_BIN=def_args, DO_USE_POPEN_SHELL=True, do_allow_new_settings=True
+        )
+        self.override_settings.__enter__()
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        for m in self.mocks:
-            m.stop()
+        self.override_settings.__exit__()
 
 
 # Notice that this is a context manager!
@@ -42,11 +42,10 @@ class GitDiffFactory:
                 def_args += f"{git_diff_entry.insertions}\t{git_diff_entry.deletions}\t{git_diff_entry.path}\n"
             def_args += '" ; /usr/bin/true'
 
-        self.mocks.append(mock.patch("git_loc.git_client.GIT_DIFF_BIN", def_args))
-        self.mocks.append(mock.patch("git_loc.git_client.DO_USE_POPEN_SHELL", True))
-        for m in self.mocks:
-            m.start()
+        self.override_settings = override_settings(
+            GIT_DIFF_BIN=def_args, DO_USE_POPEN_SHELL=True, do_allow_new_settings=True
+        )
+        self.override_settings.__enter__()
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        for m in self.mocks:
-            m.stop()
+        self.override_settings.__exit__()

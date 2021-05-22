@@ -1,0 +1,61 @@
+[tool.poetry]
+name = "git-loc"
+description = "Count LOC in a Git repo branch"
+authors = ["nimiq <puntonim@gmail.com>"]
+license = "no license"
+
+# Do not edit `version` directly or with `poetry version`, but instead run: `$ make version-bump/1.0.0`.
+# This is so we can write the version in __version__.py which is always included in
+#  the wheel after a poetry build (unlike pyproject.toml).
+version = "1.0.0"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+dynaconf = "^3.1.4"
+rich = "^10.2.2"
+click = "^8.0.1"
+
+[tool.poetry.dev-dependencies]
+black = "21.5b1"  # Must be the same as in `.pre-commit-config.yaml`.
+isort = "5.8.0"  # Must be the same as in `.pre-commit-config.yaml`.
+pytest = "^6.2.4"
+pytest-xdist = {extras = ["psutil"], version = "^2.2.1"}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]  # See: https://black.readthedocs.io/en/stable/pyproject_toml.html
+# line-length = 88  # Default.
+# skip-string-normalization = true  # Only for old projects.
+target-version = ["py39"]
+include = '\.py?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | \.serverless
+  | _build
+  | buck-out
+  | build
+  | dist
+  | node_modules
+
+  # Project-specific:
+  | docs
+)/
+'''
+
+[tool.isort]
+profile = "black"  # See: https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#profile
+# known_first_party = ["", ""]
+
+[tool.poetry.scripts]
+# Entrypoints: executables that will be installed when installing the package.
+# Run in dev from `/git-loc` with: `$ poetry run git-loc`.
+# Run in prod (after a pip install) with: `$ git-loc`.
+git-loc = "git_loc.cli:cli"

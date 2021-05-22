@@ -1,8 +1,16 @@
+from datetime import datetime
+
 import pytest
 
-from git_loc.main import AuthorMismatch, FromDateMismatch, LocCounter, ToDateMismatch
+from git_loc.clients.git_client import NotADate
+from git_loc.domains.main import (
+    AuthorMismatch,
+    EndDateMismatch,
+    LocCounter,
+    StartDateMismatch,
+)
 
-from .testfactories.git_log_factory import (
+from ..testfactories.git_log_factory import (
     GitDiffEntry,
     GitDiffFactory,
     GitLogEntry,
@@ -15,7 +23,7 @@ class TestLocCounter:
         self.git_log_entry1 = GitLogEntry(
             hash="1111111",
             date="2020-02-10",
-            email="foo@gmail.com",
+            email="john@gmail.com",
             summary="NEW Enable CORS for qa.mierecensioni.it (HEAD -> master, origin/master)",
         )
         self.git_diff_entry1 = GitDiffEntry(
@@ -28,6 +36,8 @@ class TestLocCounter:
             deletions="3",
             path="/tmp2",
         )
+        self.start_date = datetime(2020, 2, 1)
+        self.end_date = datetime(2020, 3, 1)
 
     def test_happy_flow(self):
         counter = LocCounter(root_dir="/tmp")
@@ -36,9 +46,9 @@ class TestLocCounter:
         ):
             loc_tot = counter.count(
                 branch="master",
-                from_date="2020-02-01",
-                to_date="2020-03-01",
-                author="foo",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
                 # files_to_ignore=("package-lock.json", ".gitignore"),
             )
         assert loc_tot == 26
@@ -47,7 +57,7 @@ class TestLocCounter:
         git_log_entry2 = GitLogEntry(
             hash="2222222",
             date="2020-02-11",
-            email="foo@gmail.com",
+            email="john@gmail.com",
             summary="NEW Answer model",
         )
         counter = LocCounter(root_dir="/tmp")
@@ -56,9 +66,9 @@ class TestLocCounter:
         ):
             loc_tot = counter.count(
                 branch="master",
-                from_date="2020-02-01",
-                to_date="2020-03-01",
-                author="foo",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
                 # files_to_ignore=("package-lock.json", ".gitignore"),
             )
         assert loc_tot == 52
@@ -75,9 +85,9 @@ class TestLocCounter:
         ):
             loc_tot = counter.count(
                 branch="master",
-                from_date="2020-02-01",
-                to_date="2020-03-01",
-                author="foo",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
                 # files_to_ignore=("package-lock.json", ".gitignore"),
             )
         assert loc_tot == 27
@@ -94,9 +104,9 @@ class TestLocCounter:
         ):
             loc_tot = counter.count(
                 branch="master",
-                from_date="2020-02-01",
-                to_date="2020-03-01",
-                author="foo",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
                 # files_to_ignore=("package-lock.json", ".gitignore"),
             )
         assert loc_tot == 27
@@ -123,9 +133,9 @@ class TestLocCounter:
         ):
             loc_tot = counter.count(
                 branch="master",
-                from_date="2020-02-01",
-                to_date="2020-03-01",
-                author="foo",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
                 files_to_ignore=("package-lock.json", ".gitignore"),
             )
         assert loc_tot == 26
@@ -138,36 +148,64 @@ class TestLocCounter:
             with pytest.raises(AuthorMismatch):
                 counter.count(
                     branch="master",
-                    from_date="2020-02-01",
-                    to_date="2020-03-01",
+                    start_date=self.start_date,
+                    end_date=self.end_date,
                     author="XXX",
                     # files_to_ignore=("package-lock.json", ".gitignore"),
                 )
 
-    def test_from_date_mismatch(self):
+    def test_start_date_mismatch(self):
         counter = LocCounter(root_dir="/tmp")
         with GitLogFactory((self.git_log_entry1,)), GitDiffFactory(
             (self.git_diff_entry1, self.git_diff_entry2)
         ):
-            with pytest.raises(FromDateMismatch):
+            with pytest.raises(StartDateMismatch):
                 counter.count(
                     branch="master",
-                    from_date="2021-02-01",
-                    to_date="2021-03-01",
-                    author="foo",
+                    start_date=datetime(2021, 2, 1),
+                    end_date=datetime(2021, 3, 1),
+                    author="john",
                     # files_to_ignore=("package-lock.json", ".gitignore"),
                 )
 
-    def test_to_date_mismatch(self):
+    def test_start_date_string(self):
         counter = LocCounter(root_dir="/tmp")
         with GitLogFactory((self.git_log_entry1,)), GitDiffFactory(
             (self.git_diff_entry1, self.git_diff_entry2)
         ):
-            with pytest.raises(ToDateMismatch):
+            with pytest.raises(NotADate):
                 counter.count(
                     branch="master",
-                    from_date="2020-02-01",
-                    to_date="2020-02-01",
-                    author="foo",
+                    start_date="XXX",
+                    end_date=datetime(2021, 3, 1),
+                    author="john",
+                    # files_to_ignore=("package-lock.json", ".gitignore"),
+                )
+
+    def test_end_date_mismatch(self):
+        counter = LocCounter(root_dir="/tmp")
+        with GitLogFactory((self.git_log_entry1,)), GitDiffFactory(
+            (self.git_diff_entry1, self.git_diff_entry2)
+        ):
+            with pytest.raises(EndDateMismatch):
+                counter.count(
+                    branch="master",
+                    start_date=datetime(2020, 2, 1),
+                    end_date=datetime(2020, 2, 1),
+                    author="john",
+                    # files_to_ignore=("package-lock.json", ".gitignore"),
+                )
+
+    def test_end_date_string(self):
+        counter = LocCounter(root_dir="/tmp")
+        with GitLogFactory((self.git_log_entry1,)), GitDiffFactory(
+            (self.git_diff_entry1, self.git_diff_entry2)
+        ):
+            with pytest.raises(NotADate):
+                counter.count(
+                    branch="master",
+                    start_date=datetime(2020, 2, 1),
+                    end_date="XXX",
+                    author="john",
                     # files_to_ignore=("package-lock.json", ".gitignore"),
                 )

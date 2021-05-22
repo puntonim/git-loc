@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 5.8.0  # Must be the same as in pyproject.toml.
+    hooks:
+      - id: isort
+        files: '^(git_loc|tests)/'
+        types: [file, python]
+  - repo: https://github.com/python/black
+    rev: 21.5b1  # Must be the same as in pyproject.toml.
+    hooks:
+      - id: black
+        language_version: python3.9
+        files: '^(git_loc|tests)/'
+        types: [file, python]

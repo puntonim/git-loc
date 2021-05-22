@@ -1,6 +1,10 @@
-from git_loc.git_client import GitClient
+from datetime import datetime
 
-from .testfactories.git_log_factory import (
+import pytest
+
+from git_loc.clients.git_client import GitClient, NotADate
+
+from ..testfactories.git_log_factory import (
     GitDiffEntry,
     GitDiffFactory,
     GitLogEntry,
@@ -22,16 +26,18 @@ class TestLog:
             email="foo@gmail.com",
             summary="NEW Answer model",
         )
+        self.start_date = datetime(2021, 1, 1)
+        self.end_date = datetime(2022, 12, 31)
 
     def test_happy_flow(self):
-        git = GitClient("/tmp")
-        git_log = git.log(
-            branch="master",
-            from_date="2021-01-01",
-            to_date="2022-12-31",
-            author="foo",
-        )
         with GitLogFactory((self.git_log_entry1, self.git_log_entry2)):
+            git = GitClient("/tmp")
+            git_log = git.log(
+                branch="master",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
+            )
             logs = [x for x in git_log]
         assert logs[0] == self.git_log_entry1
         assert logs[1] == self.git_log_entry2
@@ -43,28 +49,50 @@ class TestLog:
             email="-",
             summary="NEW Enable CORS for qa.mierecensioni.it (HEAD -> master, origin/master)",
         )
-        git = GitClient("/tmp")
-        git_log = git.log(
-            branch="master",
-            from_date="2021-01-01",
-            to_date="2022-12-31",
-            author="foo",
-        )
         with GitLogFactory((git_log_entry,)):
+            git = GitClient("/tmp")
+            git_log = git.log(
+                branch="master",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
+            )
             logs = [x for x in git_log]
         assert logs[0] == git_log_entry
 
     def test_no_commits(self):
-        git = GitClient("/tmp")
-        git_log = git.log(
-            branch="master",
-            from_date="2021-01-01",
-            to_date="2022-12-31",
-            author="foo",
-        )
         with GitLogFactory(tuple()):
+            git = GitClient("/tmp")
+            git_log = git.log(
+                branch="master",
+                start_date=self.start_date,
+                end_date=self.end_date,
+                author="john",
+            )
             logs = [x for x in git_log]
         assert not logs
+
+    def test_start_date_string(self):
+        with GitLogFactory(tuple()), pytest.raises(NotADate):
+            git = GitClient("/tmp")
+            git_log = git.log(
+                branch="master",
+                start_date="XXX",
+                end_date=self.end_date,
+                author="john",
+            )
+            [x for x in git_log]
+
+    def test_end_date_string(self):
+        with GitLogFactory(tuple()), pytest.raises(NotADate):
+            git = GitClient("/tmp")
+            git_log = git.log(
+                branch="master",
+                start_date=self.start_date,
+                end_date="XXX",
+                author="john",
+            )
+            [x for x in git_log]
 
 
 class TestDiff:
@@ -81,9 +109,9 @@ class TestDiff:
         )
 
     def test_happy_flow(self):
-        git = GitClient("/tmp")
-        git_log = git.diff(hash="2fdffa2")
         with GitDiffFactory((self.git_diff_entry1, self.git_diff_entry2)):
+            git = GitClient("/tmp")
+            git_log = git.diff(hash="2fdffa2")
             diffs = [x for x in git_log]
         assert diffs[0] == self.git_diff_entry1
         assert diffs[1] == self.git_diff_entry2
@@ -94,9 +122,9 @@ class TestDiff:
             deletions="2",
             path="/tmp1",
         )
-        git = GitClient("/tmp")
-        git_log = git.diff(hash="2fdffa2")
         with GitDiffFactory((git_diff_entry,)):
+            git = GitClient("/tmp")
+            git_log = git.diff(hash="2fdffa2")
             diffs = [x for x in git_log]
         assert diffs[0] == git_diff_entry
 
@@ -106,8 +134,8 @@ class TestDiff:
             deletions="-",
             path="/tmp1",
         )
-        git = GitClient("/tmp")
-        git_log = git.diff(hash="2fdffa2")
         with GitDiffFactory((git_diff_entry,)):
+            git = GitClient("/tmp")
+            git_log = git.diff(hash="2fdffa2")
             diffs = [x for x in git_log]
         assert diffs[0] == git_diff_entry

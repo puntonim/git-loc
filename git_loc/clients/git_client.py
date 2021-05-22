@@ -1,35 +1,50 @@
 import subprocess
 from collections import namedtuple
+from datetime import datetime
 from pathlib import Path
 from typing import Iterator, Optional, Union
 
-GIT_LOG_BIN = "git"  # Or: "/usr/local/bin/git".
-GIT_DIFF_BIN = GIT_LOG_BIN
-DO_USE_POPEN_SHELL = False
-
+from git_loc.conf import settings
 
 GitLogEntry = namedtuple("GitLogEntry", ("hash", "date", "email", "summary"))
 GitDiffEntry = namedtuple("GitDiffEntry", ("insertions", "deletions", "path"))
+
+
+class BaseGitClientException(Exception):
+    pass
+
+
+class NotADate(BaseGitClientException):
+    def __init__(self, date):
+        self.date = date
 
 
 class GitClient:
     def __init__(self, root_dir: Union[Path, str]):
         self.root_dir = root_dir
 
+        # Or: "/usr/local/bin/git".
+        self.GIT_LOG_BIN = settings.get("GIT_LOG_BIN", "git")
+        self.GIT_DIFF_BIN = settings.get("GIT_DIFF_BIN", "git")
+        self.DO_USE_POPEN_SHELL = settings.get("DO_USE_POPEN_SHELL", False)
+
     def _run_git_process(self, git_base_cmd, *args):
         run_args = (git_base_cmd,) + args
-        if DO_USE_POPEN_SHELL:
+        if self.DO_USE_POPEN_SHELL:
             run_args = " ".join(run_args)
         return subprocess.run(
-            run_args, cwd=self.root_dir, capture_output=True, shell=DO_USE_POPEN_SHELL
+            run_args,
+            cwd=self.root_dir,
+            capture_output=True,
+            shell=self.DO_USE_POPEN_SHELL,
         )
 
     def log(
         self,
         branch: str,
         author: Optional[str] = None,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
     ) -> Iterator[GitLogEntry]:
         # Ref. command:
         # $ git log master \
@@ -46,14 +61,18 @@ class GitClient:
             "--date=short",
             "--no-merges",
         ]
-        if from_date:
-            run_args.append(f"--since='{from_date}'")
-        if to_date:
-            run_args.append(f"--before='{to_date}'")
+        if start_date:
+            if not isinstance(start_date, datetime):
+                raise NotADate(start_date)
+            run_args.append(f"--since='{start_date.strftime('%Y-%m-%d')}'")
+        if end_date:
+            if not isinstance(end_date, datetime):
+                raise NotADate(end_date)
+            run_args.append(f"--before='{end_date.strftime('%Y-%m-%d')}'")
         if author:
             # No need to use quotes even if `author` includes a whitespace.
             run_args.append(f"--author={author}")
-        result = self._run_git_process(GIT_LOG_BIN, *run_args)
+        result = self._run_git_process(self.GIT_LOG_BIN, *run_args)
         for commit in result.stdout.decode("utf-8").split("\n"):
             if not commit:
                 continue
@@ -73,7 +92,7 @@ class GitClient:
         # Ref. command:
         # $ git diff --numstat 2fdffa2~1 2fdffa2
         result = self._run_git_process(
-            GIT_DIFF_BIN, "diff", "--numstat", f"{hash}~1", hash
+            self.GIT_DIFF_BIN, "diff", "--numstat", f"{hash}~1", hash
         )
         for file_diff_stats in result.stdout.decode("utf-8").split("\n"):
             if not file_diff_stats:

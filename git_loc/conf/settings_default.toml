@@ -1,0 +1,11 @@
+# Default settings, to be overridden by `settings_development.toml` and `settings_test.toml`.
+# Note: do not use *.local.* files (see README.md).
+
+[default]
+
+IS_TEST = false
+DO_SUPPRESS_PRINT = false
+
+GIT_LOG_BIN = "git"
+GIT_DIFF_BIN = "git"
+DO_USE_POPEN_SHELL = false
