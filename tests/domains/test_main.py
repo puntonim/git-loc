@@ -19,7 +19,7 @@ from ..testfactories.git_log_factory import (
 
 
 class TestLocCounter:
-    def setup(self):
+    def setup_method(self):
         self.git_log_entry1 = GitLogEntry(
             hash="1111111",
             date="2020-02-10",

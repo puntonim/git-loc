@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Collection, Optional, Union
+from typing import Collection, Optional
 
 from rich.table import Table
 
@@ -28,7 +28,7 @@ console = printer.ConsoleAdapter()
 
 
 class LocCounter:
-    def __init__(self, root_dir: Union[Path, str]):
+    def __init__(self, root_dir: Path | str):
         """
         Count the lines of code (LOC) modified in a Git repo branch in all the non-merge
          commits, authored by an author, within a start and end date, and ignoring

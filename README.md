@@ -6,8 +6,8 @@ Count the lines of code (LOC) modified in a Git repo branch in all the non-merge
 
 Tested with git version 2.23.0 and Python 3.
 
-If the git binary cannot be found, then edit the setting `GIT_LOG_BIN` and 
- `GIT_DIFF_BIN` in `git_loc/conf/settings_default.py`.
+If the git binary cannot be found, then edit the settings `GIT_LOG_BIN` and 
+ `GIT_DIFF_BIN` in `git_loc/conf/settings_default.py` (or better in `git_loc/conf/.secrets.toml`).
 
 
 Usage
@@ -16,10 +16,10 @@ Usage
 $ poetry run git-loc count
 ```
 
-To use CLI params:
+To use CLI params, instead of typing them intractively:
 ```shell
 $ poetry run git-loc count \
-   --dir ~/workspace/mierecensioni-be \
+   --dir /tmp/mierecensioni-be \
    --branch master \
    --start-date 2020-01-01 \
    --end-date 2020-12-31 \
@@ -34,16 +34,14 @@ $ poetry run git-loc count \
 Example
 -------
 ```shell
-$ poetry run git-loc count \
-   --dir ~/workspace/mierecensioni-be \
-   --branch master \
-   --start-date 2020-01-01 \
-   --end-date 2020-12-31 \
-   --author puntonim \
-   --ignore-file .gitignore \
-   --ignore-file package-lock.json \
-   --ignore-file poetry.lock \
-   --ignore-file cassettes
+$ poetry run git-loc count
+
+Git root dir: /tmp/mierecensioni-be
+Git branch: master
+Commits author name or email [not required]: puntonim
+Commits start date (eg.: 2020-01-12) [not required]: 2020-01-01
+Commits end date (eg.: 2020-01-12) [not required]: 2020-12-31
+File names to ignore (use ; as separator) [not required]: .gitignore;package-lock.json;poetry.lock;cassettes
 
 Computing...
                                    Files
@@ -140,7 +138,7 @@ Computing...
 │ 0          │ 19        │ conf/uwsgi_params                               │
 └────────────┴───────────┴─────────────────────────────────────────────────┘
 
-Repo root dir: /Users/nimiq/workspace/mierecensioni-be
+Repo root dir: /tmp/mierecensioni-be
 Branch: master
 Author: puntonim
 Start date: 2020-01-01
@@ -154,11 +152,11 @@ LOC: 3905
 Strategy
 ========
 The strategy used to compute the LOC is the following:
-- list all non-merge commits in the git repo branch, between the start_date and the
-   end_date and with the given author
-- for each commit, issue a git diff vs the previous commit
-- for each file in the diff, if the path does not match the files to ignore list, then
-   add its additions and deletions (deletions as absolute int).
+- list all non-merge commits in the git repo branch, between the start date and the
+   end date and with the given author
+- for each commit, execute a git diff with the previous commit
+- for each file in the diff, if the path does not match any files to be ignored, then
+   add its additions and deletions (deletions as absolute integer).
 
 The same strategy done with git commands would be:
 ```shell
@@ -189,19 +187,19 @@ LOC is computed adding all the numbers reported by the git diff commands, but
 Development
 ===========
 
-Tested with git version 2.23.0 and Python 3.
+Tested with git version 2.23.0 and Python 3.11.
 
-If the git binary cannot be found, then edit the setting `GIT_LOG_BIN` and 
- `GIT_DIFF_BIN` in `git_loc/conf/settings_default.py`.
+If the git binary cannot be found, then edit the settings `GIT_LOG_BIN` and 
+ `GIT_DIFF_BIN` in `git_loc/conf/settings_default.py` (or better in `git_loc/conf/.secrets.toml`).
 
 1 - System requirements
 -----------------------
 
-**Python 3.9**\
-The target Python 3.9, install it with pyenv:
+**Python 3.11**\
+The target Python 3.11, install it with pyenv:
 ```sh
 $ pyenv install -l  # List all available versions.
-$ pyenv install 3.9.5
+$ pyenv install 3.11.0
 ```
 
 **Poetry**\
@@ -230,12 +228,12 @@ $ make poetry-destroy-and-recreate-env
 Without using Makefile the full process is:
 ```sh
 # Activate the Python version for the current project:
-$ pyenv local 3.9.5  # It creates `.python-version`, to be git-ignored.
+$ pyenv local 3.11.0  # It creates `.python-version`, to be git-ignored.
 $ pyenv which python
-~/.pyenv/versions/3.9.5/bin/python
+~/.pyenv/versions/3.11.0/bin/python
 
 # Now create a venv with poetry:
-$ poetry env use ~/.pyenv/versions/3.9.5/bin/python
+$ poetry env use ~/.pyenv/versions/3.11.0/bin/python
 # Now you can open a shell and/or install:
 $ poetry shell
 # And finally, install all requirements:

@@ -2,7 +2,7 @@ import subprocess
 from collections import namedtuple
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator, Optional, Union
+from typing import Iterator, Optional
 
 from git_loc.conf import settings
 
@@ -20,7 +20,7 @@ class NotADate(BaseGitClientException):
 
 
 class GitClient:
-    def __init__(self, root_dir: Union[Path, str]):
+    def __init__(self, root_dir: Path | str):
         self.root_dir = root_dir
 
         # Or: "/usr/local/bin/git".

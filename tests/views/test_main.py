@@ -17,7 +17,7 @@ from ..testutils.settings_testutils import override_settings
 
 
 class TestCount:
-    def setup(self):
+    def setup_method(self):
         self.git_log_entry1 = GitLogEntry(
             hash="1111111",
             date="2020-02-10",
@@ -210,7 +210,7 @@ class TestCount:
 
 
 class TestCli:
-    def setup(self):
+    def setup_method(self):
         self.git_log_entry1 = GitLogEntry(
             hash="1111111",
             date="2020-02-10",

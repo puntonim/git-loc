@@ -13,7 +13,7 @@ from ..testfactories.git_log_factory import (
 
 
 class TestLog:
-    def setup(self):
+    def setup_method(self):
         self.git_log_entry1 = GitLogEntry(
             hash="2fdffa2",
             date="2020-02-10",
@@ -96,7 +96,7 @@ class TestLog:
 
 
 class TestDiff:
-    def setup(self):
+    def setup_method(self):
         self.git_diff_entry1 = GitDiffEntry(
             insertions="10",
             deletions="2",
